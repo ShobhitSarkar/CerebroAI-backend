@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import pdf from 'pdf-parse';
 import mammoth from 'mammoth';
+import { Types } from 'mongoose';
 import Document, { IDocument } from '../models/Document';
 import { AppError } from '../utils/errors';
 import logger from '../utils/logger';
@@ -25,12 +26,14 @@ export class DocumentService {
       }
 
       // Create document in database
-      const document: IDocument = await Document.create({
+      const document = await Document.create({
         originalName: file.originalname,
         mimeType: file.mimetype,
         content,
-        processingStatus: 'pending'
-      });
+        processingStatus: 'pending',
+        chunks: [], // Add default empty array for chunks
+        vectorizationStatus: 'pending' // Add default vectorization status
+      }) as IDocument;
 
       // Clean up uploaded file
       await fs.unlink(file.path);
@@ -64,7 +67,7 @@ export class DocumentService {
   }
 
   async getDocument(id: string): Promise<IDocument> {
-    const document = await Document.findById(id);
+    const document = await Document.findById(id) as IDocument | null;
     if (!document) {
       throw new AppError(404, 'Document not found');
     }
@@ -72,7 +75,7 @@ export class DocumentService {
   }
 
   async getDocumentStatus(id: string): Promise<{ status: string; error?: string }> {
-    const document = await Document.findById(id, 'processingStatus error');
+    const document = await Document.findById(id, 'processingStatus error') as IDocument | null;
     if (!document) {
       throw new AppError(404, 'Document not found');
     }

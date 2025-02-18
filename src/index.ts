@@ -9,6 +9,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { securityHeaders, corsOptions, sanitizeInput } from './middleware/security';
 import routes from './api/routes';
 import logger from './utils/logger';
+import { initializeVectorSearch, validateVectorSearchConfig } from './utils/vectorSearch';
 
 logger.info('Starting application initialization...');
 
@@ -98,6 +99,16 @@ const startServer = async () => {
   try {
     await connectDB();
     
+    // Validate and initialize vector search
+    const vectorSearchSupported = await validateVectorSearchConfig();
+    if (!vectorSearchSupported) {
+      logger.error('Vector search is not supported on this MongoDB deployment');
+      process.exit(1);
+    }
+    
+    await initializeVectorSearch();
+    logger.info('Vector search initialized successfully');
+    
     // Make Redis optional in development
     const redisClient = await connectRedis();
     if (redisClient) {
@@ -112,6 +123,7 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (error) => {
