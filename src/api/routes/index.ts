@@ -2,7 +2,8 @@
 import { Router } from 'express';
 import { apiLimiter } from '../../middleware/rateLimiter';
 import documentRoutes from './document.routes';
-import flashcardRoutes from '../routes/flashcards.routes';
+import flashcardRoutes from './flashcards.routes';
+import chatRoutes from './chat.routes';
 import mongoose from 'mongoose';
 
 const router = Router();
@@ -39,5 +40,6 @@ router.post('/test', async (req, res) => {
 
 router.use('/documents', documentRoutes);
 router.use('/flashcards', flashcardRoutes);
+router.use('/chat', chatRoutes);
 
 export default router;
